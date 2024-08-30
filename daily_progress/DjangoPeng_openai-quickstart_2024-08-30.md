@@ -1,0 +1,65 @@
+# DjangoPeng/openai-quickstart Daily Progress - 2024-08-30
+
+## Issues
+- 请问openai的apikey现在咋弄到？ #112
+- update0806 agent code #111
+- update0728 #110
+- 启动openai-translator未达到预期效果 #109
+- Deveplop/update   character glm #103
+- 变更模型，从openai变更为chatglm2 #102
+- 第17周作业 Langchain glm translator #101
+- 风格化翻译 #100
+- embedding.ipynb 执行使用 t-SNE 可视化 1536 维 Embedding 美食评论时报错 #99
+- FEAT: 作业提交，自动对话10次 #98
+- FEAT: 作业提交V4版本 #97
+- Develop/update  sales bot #96
+- Homework pdftranslator #95
+- Langchain  #92
+- Jiangze.xu #91
+- 翻译pdf代码显示The server could not be reached [Errno 0] Error，是我的api错了或者模型选错了吗 #87
+- Where is the code that generated the code of the openai-translator? #86
+- add encoding for reading file #85
+- fixed: model.ipynb.replace text-davinci-003 to gpt-3.5-turbo-instruct #84
+- LangChainDeprecationWarning #83
+- 因版本问题指定OpenAi的模型问题  #82
+- 韩振峰作业：Sales consultant #77
+- add homework for openAITranslator #71
+- Feature/ai translator with chat glm6 b int4 #66
+- 廖生-4725-作业 #64
+- Feature/final homework project #63
+- CLI 参数添加 api_key #61
+- 为 openai-translator 代码添加中文注释 #60
+- [update]add hoemwork #58
+- fix:修改了requests.exceptions.RequestException和Timeout捕获异常位置 #55
+
+## Pull Requests
+- update0806 agent code #111
+- update0728 #110
+- Deveplop/update   character glm #103
+- 变更模型，从openai变更为chatglm2 #102
+- 第17周作业 Langchain glm translator #101
+- 风格化翻译 #100
+- FEAT: 作业提交，自动对话10次 #98
+- FEAT: 作业提交V4版本 #97
+- Develop/update  sales bot #96
+- Homework pdftranslator #95
+- Langchain  #92
+- Jiangze.xu #91
+- add encoding for reading file #85
+- fixed: model.ipynb.replace text-davinci-003 to gpt-3.5-turbo-instruct #84
+- 因版本问题指定OpenAi的模型问题  #82
+- 韩振峰作业：Sales consultant #77
+- add homework for openAITranslator #71
+- Feature/ai translator with chat glm6 b int4 #66
+- 廖生-4725-作业 #64
+- Feature/final homework project #63
+- CLI 参数添加 api_key #61
+- 为 openai-translator 代码添加中文注释 #60
+- [update]add hoemwork #58
+- fix:修改了requests.exceptions.RequestException和Timeout捕获异常位置 #55
+- Feature/compare different translation style #51
+- study: add 2 output parser for synopsis and review #50
+- 新增Gradio UI;.gitignore新增忽略.idea文件、忽略gradio目录下产生的日志文件 #42
+- fix parameter check too early #38
+- add .gitignore file & format codes.  #35
+- 提交homework1 &2 #32
