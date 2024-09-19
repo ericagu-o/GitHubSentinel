@@ -1,3 +1,4 @@
 [
-    "DjangoPeng/openai-quickstart"
+    "ollama/ollama",
+    "vllm-project/vllm"
 ]
