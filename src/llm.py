@@ -1,104 +1,123 @@
-# src/github_client.py
-
-import requests  # 导入requests库用于HTTP请求
-from datetime import datetime, date, timedelta  # 导入日期处理模块
-import os  # 导入os模块用于文件和目录操作
+import json
+import requests
 from logger import LOG  # 导入日志模块
 
-class GitHubClient:
-    def __init__(self, token):
-        self.token = token  # GitHub API令牌
-        self.headers = {'Authorization': f'token {self.token}'}  # 设置HTTP头部认证信息
+class LLM:
+    def __init__(self, config):
+        """
+        初始化 LLM 类，根据配置选择使用的模型（OpenAI 或 Ollama）。
+        
+        :param config: 配置对象，包含所有的模型配置参数。
+        """
+        self.config = config
+        self.model = config.llm_model_type.lower()  # 获取模型类型并转换为小写
+        if self.model == "openai":
+            from openai import OpenAI  # 导入OpenAI库用于访问GPT模型
+            self.client = OpenAI()  # 创建OpenAI客户端实例
+        elif self.model == "ollama":
+            self.api_url = config.ollama_api_url  # 设置Ollama API的URL
+        else:
+            raise ValueError(f"Unsupported model type: {self.model}")  # 如果模型类型不支持，抛出错误
+        
+        # 从TXT文件加载系统提示信息
+        with open("prompts/report_prompt.txt", "r", encoding='utf-8') as file:
+            self.system_prompt = file.read()
 
-    def fetch_updates(self, repo, since=None, until=None):
-        # 获取指定仓库的更新，可以指定开始和结束日期
-        updates = {
-            'commits': self.fetch_commits(repo, since, until),  # 获取提交记录
-            'issues': self.fetch_issues(repo, since, until),  # 获取问题
-            'pull_requests': self.fetch_pull_requests(repo, since, until)  # 获取拉取请求
-        }
-        return updates
+    def generate_daily_report(self, markdown_content, dry_run=False):
+        """
+        生成每日报告，根据配置选择不同的模型来处理请求。
+        
+        :param markdown_content: 用户提供的Markdown内容。
+        :param dry_run: 如果为True，提示信息将保存到文件而不实际调用模型。
+        :return: 生成的报告内容或"DRY RUN"字符串。
+        """
+        # 准备消息列表，包含系统提示和用户内容
+        messages = [
+            {"role": "system", "content": self.system_prompt},
+            {"role": "user", "content": markdown_content},
+        ]
 
-    def fetch_commits(self, repo, since=None, until=None):
-        LOG.debug(f"准备获取 {repo} 的 Commits")
-        url = f'https://api.github.com/repos/{repo}/commits'  # 构建获取提交的API URL
-        params = {}
-        if since:
-            params['since'] = since  # 如果指定了开始日期，添加到参数中
-        if until:
-            params['until'] = until  # 如果指定了结束日期，添加到参数中
+        if dry_run:
+            # 如果启用了dry_run模式，将不会调用模型，而是将提示信息保存到文件中
+            LOG.info("Dry run mode enabled. Saving prompt to file.")
+            with open("daily_progress/prompt.txt", "w+") as f:
+                json.dump(messages, f, indent=4, ensure_ascii=False)  # 将消息保存为JSON格式
+            LOG.debug("Prompt已保存到 daily_progress/prompt.txt")
+            return "DRY RUN"
 
+        # 根据选择的模型调用相应的生成报告方法
+        if self.model == "openai":
+            return self._generate_report_openai(messages)
+        elif self.model == "ollama":
+            return self._generate_report_ollama(messages)
+        else:
+            raise ValueError(f"Unsupported model type: {self.model}")
+
+    def _generate_report_openai(self, messages):
+        """
+        使用 OpenAI GPT 模型生成报告。
+        
+        :param messages: 包含系统提示和用户内容的消息列表。
+        :return: 生成的报告内容。
+        """
+        LOG.info("使用 OpenAI GPT 模型开始生成报告。")
         try:
-            response = requests.get(url, headers=self.headers, params=params, timeout=10)
-            response.raise_for_status()  # 检查请求是否成功
-            return response.json()  # 返回JSON格式的数据
+            response = self.client.chat.completions.create(
+                model=self.config.openai_model_name,  # 使用配置中的OpenAI模型名称
+                messages=messages
+            )
+            LOG.debug("GPT response: {}", response)
+            return response.choices[0].message.content  # 返回生成的报告内容
         except Exception as e:
-            LOG.error(f"从 {repo} 获取 Commits 失败：{str(e)}")
-            LOG.error(f"响应详情：{response.text if 'response' in locals() else '无响应数据可用'}")
-            return []  # Handle failure case
+            LOG.error(f"生成报告时发生错误：{e}")
+            raise
 
-    def fetch_issues(self, repo, since=None, until=None):
-        LOG.debug(f"准备获取 {repo} 的 Issues。")
-        url = f'https://api.github.com/repos/{repo}/issues'  # 构建获取问题的API URL
-        params = {'state': 'closed', 'since': since, 'until': until}
+    def _generate_report_ollama(self, messages):
+        """
+        使用 Ollama LLaMA 模型生成报告。
+        
+        :param messages: 包含系统提示和用户内容的消息列表。
+        :return: 生成的报告内容。
+        """
+        LOG.info("使用 Ollama 托管模型服务开始生成报告。")
         try:
-            response = requests.get(url, headers=self.headers, params=params, timeout=10)
-            response.raise_for_status()
-            return response.json()
+            payload = {
+                "model": self.config.ollama_model_name,  # 使用配置中的Ollama模型名称
+                "messages": messages,
+                "stream": False
+            }
+            response = requests.post(self.api_url, json=payload)  # 发送POST请求到Ollama API
+            response_data = response.json()
+            
+            # 调试输出查看完整的响应结构
+            LOG.debug("Ollama response: {}", response_data)
+            
+            # 直接从响应数据中获取 content
+            message_content = response_data.get("message", {}).get("content", None)
+            if message_content:
+                return message_content  # 返回生成的报告内容
+            else:
+                LOG.error("无法从响应中提取报告内容。")
+                raise ValueError("Invalid response structure from Ollama API")
         except Exception as e:
-            LOG.error(f"从 {repo} 获取 Issues 失败：{str(e)}")
-            LOG.error(f"响应详情：{response.text if 'response' in locals() else '无响应数据可用'}")
-            return []
+            LOG.error(f"生成报告时发生错误：{e}")
+            raise
 
-    def fetch_pull_requests(self, repo, since=None, until=None):
-        LOG.debug(f"准备获取 {repo} 的 Pull Requests。")
-        url = f'https://api.github.com/repos/{repo}/pulls'  # 构建获取拉取请求的API URL
-        params = {'state': 'closed', 'since': since, 'until': until}
-        try:
-            response = requests.get(url, headers=self.headers, params=params, timeout=10)
-            response.raise_for_status()  # 确保成功响应
-            return response.json()
-        except Exception as e:
-            LOG.error(f"从 {repo} 获取 Pull Requests 失败：{str(e)}")
-            LOG.error(f"响应详情：{response.text if 'response' in locals() else '无响应数据可用'}")
-            return []
 
-    def export_daily_progress(self, repo):
-        LOG.debug(f"[准备导出项目进度]：{repo}")
-        today = datetime.now().date().isoformat()  # 获取今天的日期
-        updates = self.fetch_updates(repo, since=today)  # 获取今天的更新数据
-        
-        repo_dir = os.path.join('daily_progress', repo.replace("/", "_"))  # 构建存储路径
-        os.makedirs(repo_dir, exist_ok=True)  # 确保目录存在
-        
-        file_path = os.path.join(repo_dir, f'{today}.md')  # 构建文件路径
-        with open(file_path, 'w') as file:
-            file.write(f"# Daily Progress for {repo} ({today})\n\n")
-            file.write("\n## Issues Closed Today\n")
-            for issue in updates['issues']:  # 写入今天关闭的问题
-                file.write(f"- {issue['title']} #{issue['number']}\n")
-        
-        LOG.info(f"[{repo}]项目每日进展文件生成： {file_path}")  # 记录日志
-        return file_path
+if __name__ == '__main__':
+    from config import Config  # 导入配置管理类
+    config = Config()
+    llm = LLM(config)
 
-    def export_progress_by_date_range(self, repo, days):
-        today = date.today()  # 获取当前日期
-        since = today - timedelta(days=days)  # 计算开始日期
-        
-        updates = self.fetch_updates(repo, since=since.isoformat(), until=today.isoformat())  # 获取指定日期范围内的更新
-        
-        repo_dir = os.path.join('daily_progress', repo.replace("/", "_"))  # 构建目录路径
-        os.makedirs(repo_dir, exist_ok=True)  # 确保目录存在
-        
-        # 更新文件名以包含日期范围
-        date_str = f"{since}_to_{today}"
-        file_path = os.path.join(repo_dir, f'{date_str}.md')  # 构建文件路径
-        
-        with open(file_path, 'w') as file:
-            file.write(f"# Progress for {repo} ({since} to {today})\n\n")
-            file.write(f"\n## Issues Closed in the Last {days} Days\n")
-            for issue in updates['issues']:  # 写入在指定日期内关闭的问题
-                file.write(f"- {issue['title']} #{issue['number']}\n")
-        
-        LOG.info(f"[{repo}]项目最新进展文件生成： {file_path}")  # 记录日志
-        return file_path
+    markdown_content="""
+# Progress for langchain-ai/langchain (2024-08-20 to 2024-08-21)
+
+
+## Issues Closed in the Last 1 Days
+- partners/chroma: release 0.1.3 #25599
+- docs: few-shot conceptual guide #25596
+- docs: update examples in api ref #25589
+"""
+
+    report = llm.generate_daily_report(markdown_content, dry_run=False)
+    print(report)

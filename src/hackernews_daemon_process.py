@@ -4,7 +4,7 @@ import signal  # 导入signal库，用于信号处理
 import sys  # 导入sys库，用于执行系统相关的操作
 
 from config import Config  # 导入配置管理类
-from hackernews_client import HackernewsClient  # 导入GitHub客户端类，处理GitHub API请求
+from hackernews_client import HackerNewsClient  # 导入GitHub客户端类，处理GitHub API请求
 from notifier import Notifier  # 导入通知器类，用于发送通知
 from report_generator import ReportGenerator  # 导入报告生成器类
 from llm import LLM  # 导入语言模型类，可能用于生成报告内容
@@ -31,9 +31,9 @@ def main():
     signal.signal(signal.SIGTERM, graceful_shutdown)
 
     config = Config()  # 创建配置实例
-    hackernews_client = HackernewsClient()  # 创建GitHub客户端实例
+    hackernews_client = HackerNewsClient()  # 创建GitHub客户端实例
     notifier = Notifier(config.email)  # 创建通知器实例
-    llm = LLM()  # 创建语言模型实例
+    llm = LLM(config)  # 创建语言模型实例
     report_generator = ReportGenerator(llm)  # 创建报告生成器实例
 
     # 启动时立即执行（如不需要可注释）
