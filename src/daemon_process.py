@@ -59,15 +59,16 @@ def main():
 
     config = Config()  # 创建配置实例
     github_client = GitHubClient(config.github_token)  # 创建GitHub客户端实例
-    # hacker_news_client = HackerNewsClient() # 创建 Hacker News 客户端实例
+    hacker_news_client = HackerNewsClient() # 创建 Hacker News 客户端实例
     notifier = Notifier(config.email)  # 创建通知器实例
     llm = LLM(config)  # 创建语言模型实例
     report_generator = ReportGenerator(llm, config.report_types)  # 创建报告生成器实例
     subscription_manager = SubscriptionManager(config.subscriptions_file)  # 创建订阅管理器实例
 
     # 启动时立即执行（如不需要可注释）
-    github_job(subscription_manager, github_client, report_generator, notifier, config.freq_days)
-    # hn_daily_job(hacker_news_client, report_generator, notifier)
+    # github_job(subscription_manager, github_client, report_generator, notifier, config.freq_days)
+    # hn_topic_job(hacker_news_client, report_generator)
+    hn_daily_job(hacker_news_client, report_generator, notifier)
 
     # 安排 GitHub 的定时任务
     # schedule.every(config.freq_days).days.at(
