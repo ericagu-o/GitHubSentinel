@@ -36,6 +36,23 @@ class ReportGenerator:
 
         LOG.info(f"GitHub 项目报告已保存到 {report_file_path}")
         return report, report_file_path
+    
+    def generate_douban_report(self, markdown_file_path):
+        """
+        生成 豆瓣新书速递报告，并保存为 {original_filename}_report.md。
+        """
+        with open(markdown_file_path, 'r') as file:
+            markdown_content = file.read()
+
+        system_prompt = self.prompts.get("douban")
+        report = self.llm.generate_report(system_prompt, markdown_content)
+        
+        report_file_path = os.path.splitext(markdown_file_path)[0] + "_report.md"
+        with open(report_file_path, 'w+') as report_file:
+            report_file.write(report)
+
+        LOG.info(f"豆瓣新书速递报告已保存到 {report_file_path}")
+        return report, report_file_path
 
     def generate_hn_topic_report(self, markdown_file_path):
         """
