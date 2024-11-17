@@ -2,19 +2,19 @@
 # 单元测试详细说明
 
 - [单元测试详细说明](#单元测试详细说明)
-  - [`unittest.TestCase` 单元测试样例](#unittesttestcase-单元测试样例)
+  - [unittest.TestCase 单元测试样例](#unittesttestcase-单元测试样例)
     - [主要功能和特点](#主要功能和特点)
     - [使用示例](#使用示例)
-  - [`@patch` 装饰器详细](#patch-装饰器详细)
+  - [@patch 装饰器详细](#patch-装饰器详细)
     - [主要参数](#主要参数)
     - [使用场景](#使用场景)
-    - [在 `test_subscription_manager.py` 中的应用](#在-test_subscription_managerpy-中的应用)
+    - [在 test_subscription_manager.py 中的应用](#在-test_subscription_managerpy-中的应用)
     - [其他常见用法](#其他常见用法)
     - [小结](#小结)
-  - [`MagicMock` 模拟工具](#magicmock-模拟工具)
-    - [主要功能和特点](#主要功能和特点-1)
-    - [在 `test_report_generator.py` 中的应用](#在-test_report_generatorpy-中的应用)
-    - [小结](#小结-1)
+  - [MagicMock 模拟工具](#magicmock-模拟工具)
+    - [主要功能和特点](#主要功能和特点)
+    - [在 test_report_generator.py 中的应用](#在-test_report_generatorpy-中的应用)
+    - [小结](#小结)
 
 ## `unittest.TestCase` 单元测试样例
 

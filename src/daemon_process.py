@@ -46,7 +46,6 @@ def hn_daily_job(hacker_news_client, report_generator, notifier):
     date = datetime.now().strftime('%Y-%m-%d')
     # 生成每日汇总报告的目录路径
     directory_path = os.path.join('hacker_news', date)
-    print("路径：",directory_path)
     # 生成每日汇总报告并保存
     report, _ = report_generator.generate_hn_daily_report(directory_path)
     notifier.notify_hn_report(date, report)
@@ -67,19 +66,18 @@ def main():
 
     # 启动时立即执行（如不需要可注释）
     # github_job(subscription_manager, github_client, report_generator, notifier, config.freq_days)
-    # hn_topic_job(hacker_news_client, report_generator)
     hn_daily_job(hacker_news_client, report_generator, notifier)
 
     # 安排 GitHub 的定时任务
-    # schedule.every(config.freq_days).days.at(
-    #     config.exec_time
-    # ).do(github_job, subscription_manager, github_client, report_generator, notifier, config.freq_days)
+    schedule.every(config.freq_days).days.at(
+        config.exec_time
+    ).do(github_job, subscription_manager, github_client, report_generator, notifier, config.freq_days)
     
-    # # 安排 hn_topic_job 每4小时执行一次，从0点开始
-    # schedule.every(4).hours.at(":00").do(hn_topic_job, hacker_news_client, report_generator)
+    # 安排 hn_topic_job 每4小时执行一次，从0点开始
+    schedule.every(4).hours.at(":00").do(hn_topic_job, hacker_news_client, report_generator)
 
-    # # 安排 hn_daily_job 每天早上10点执行一次
-    # schedule.every().day.at("10:00").do(hn_daily_job, hacker_news_client, report_generator, notifier)
+    # 安排 hn_daily_job 每天早上10点执行一次
+    schedule.every().day.at("10:00").do(hn_daily_job, hacker_news_client, report_generator, notifier)
 
     try:
         # 在守护进程中持续运行
